@@ -11,8 +11,40 @@ const CreateTask = async (req, res) => {
 };
 
 const GetAllTasks = async (req, res) => {
+  const userId = req.user._id;
   try {
-    const tasks = await Task.find({});
+    const {
+      status,
+      priority,
+      category,
+      search,
+      sortBy,
+      sortOrder = "asc",
+      dueDateFrom,
+      dueDateTo,
+    } = req.query;
+
+    const query = { user: userId };
+
+    if (status) query.status = status;
+    if (priority) query.priority = priority;
+    if (category) query.category = category;
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+    if (dueDateFrom || dueDateTo) {
+      if (dueDateFrom) query.dueDate.$gte = new Date(dueDateFrom);
+      if (dueDateTo) query.dueDate.$lte = new Date(dueDateTo);
+    }
+
+    const sortField = sortBy || "dueDate";
+    const sortDirection = sortOrder === "desc" ? -1 : 1;
+
+    const tasks = await Task.find(query).sort({ [sortField]: sortDirection });
     res.status(200).json(tasks);
   } catch (error) {
     res.status(404).json({ error: error.message });
