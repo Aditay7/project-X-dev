@@ -61,8 +61,21 @@ const Update = async (req, res) => {
   }
 };
 
+
+const RegisterFcmToken = async(req, res) => {
+  try {
+    const { token } = req.body;
+    req.user.fcmToken = token;
+    await req.user.save();
+    res.json({ message: 'FCM token saved' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   Register,
   Login,
   Update,
+  RegisterFcmToken,
 };

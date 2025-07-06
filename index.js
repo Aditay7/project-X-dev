@@ -7,6 +7,7 @@ const app = express();
 const userRoute = require("./routes/user");
 const taskRoute = require("./routes/task");
 const subtaskRoute = require("./routes/subTask")
+const notifcationRoutes = require("./routes/notification");
 
 require("dotenv").config();
 
@@ -27,6 +28,7 @@ app.use("/api/users", userRoute);
 app.use(checkForAuthenticationCookie("token"));
 app.use("/api/tasks", taskRoute);
 app.use("/api/subtasks", subtaskRoute);
+app.use("/api/notification", notifcationRoutes)
 
 app.listen(PORT, () =>
   console.log(`Server is started on http://localhost:${PORT}`)
