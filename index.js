@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { checkForAuthenticationCookie } = require("./middlewares/auth");
+require("./schedulers/taskRemainder");
 const app = express();
 
 const userRoute = require("./routes/user");

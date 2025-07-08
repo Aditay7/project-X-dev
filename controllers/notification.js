@@ -1,40 +1,54 @@
-const admin = require("../firebase");
 const Notification = require("../models/notification");
 const User = require("../models/user");
+const Task = require("../models/task");
+const admin = require("../firebase");
 
 const CreateNotification = async (req, res) => {
   try {
-    const { user, title, message, type } = req.body;
-
-    // 1. Save notification in DB
-    const notification = new Notification({ user, title, message, type });
-    await notification.save();
-
-    // 2. Send FCM Push Notification4
-    const recipient = await User.findById(user);
-    if (recipient?.fcmToken) {
-      const payload = {
-        notification: {
-          title: title,
-          body: message,
-        },
-        token: recipient.fcmToken,
-      };
-
-      admin
-        .messaging()
-        .send(payload)
-        .then((response) => {
-          console.log("Successfully sent push notification:", response);
-        })
-        .catch((error) => {
-          console.error("Error sending push notification:", error);
-        });
+    const { userId, taskId } = req.body;
+    if (!userId || !taskId) {
+      return res
+        .status(400)
+        .json({ message: "userId and taskId are required" });
     }
 
-    res.status(201).json(notification);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    // Fetch user and task
+    const user = await User.findById(userId);
+    if (!user || !user.fcmToken) {
+      return res.status(404).json({ message: "User or FCM token not found" });
+    }
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Build dynamic notification
+    const notificationTitle = `Task Due Soon: ${task.title}`;
+    const notificationBody = `Your task '${
+      task.title
+    }' is due on ${task.dueDate.toLocaleDateString()}.`;
+
+    const message = {
+      token: user.fcmToken,
+      notification: {
+        title: notificationTitle,
+        body: notificationBody,
+      },
+      data: {
+        taskId: task._id.toString(),
+        dueDate: task.dueDate.toISOString(),
+      },
+    };
+
+    // Send notification
+    const response = await admin.messaging().send(message);
+    return res
+      .status(200)
+      .json({ message: "Notification sent successfully", response });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Failed to send notification", error: error.message });
   }
 };
 
