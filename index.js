@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { checkForAuthenticationCookie } = require("./middlewares/auth");
+const { checkTaskRole } = require("./middlewares/checkAcess");
 require("./schedulers/taskRemainder");
 const app = express();
 
@@ -22,6 +23,7 @@ mongoose
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors());
+
 
 app.get("/", (req, res) => {
   res.send("HEY, SERVER IS RUNNING PERFECTLY FINE");

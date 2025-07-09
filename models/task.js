@@ -31,6 +31,12 @@ const taskSchema = new Schema(
     category: {
       type: String, // eg. Work , Personal, School
     },
+    collaborators: [
+  {
+    userId: { type: Schema.Types.ObjectId, ref: 'user' },
+    role: { type: String, enum: ['owner', 'editor', 'viewer'], required: true }
+  }
+],
   },
   { timestamps: true }
 );

@@ -4,7 +4,7 @@ const User = require("../models/user");
 const admin = require("../firebase");
 
 // Runs every minute (for testing)
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 8 * * *", async () => {
   const start = Date.now();
   console.log("Running task reminder job...");
   const now = new Date();

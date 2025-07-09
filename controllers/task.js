@@ -2,7 +2,11 @@ const Task = require("../models/task");
 
 const CreateTask = async (req, res) => {
   try {
-    const newTask = new Task({ ...req.body, user: req.user._id });
+    const newTask = new Task({
+      ...req.body,
+      user: req.user._id,
+      collaborators: [{ userId: req.user._id, role: "owner" }],
+    });
     await newTask.save();
     res.status(201).json(newTask);
   } catch (error) {
@@ -102,9 +106,68 @@ const DeleteTask = async (req, res) => {
   }
 };
 
+const AddCollaborator = async (req, res) => {
+  const { userId, role } = req.body;
+
+  if (!["editor", "viewer"].includes(role))
+    return res.status(400).json({ message: "Invalid role" });
+
+  const task = req.task;
+  const exists = task.collaborators.find((c) => c.userId.toString() === userId);
+  if (exists)
+    return res.status(400).json({ message: "User already a collaborator" });
+
+  task.collaborators.push({ userId, role });
+  await task.save();
+
+  res.json({ message: "Collaborator added", task });
+};
+
+const RemoveCollaborator = async (req, res) => {
+  const { userId } = req.body;
+
+  const task = req.task;
+  task.collaborators = task.collaborators.filter(
+    (c) => c.userId.toString() !== userId
+  );
+  await task.save();
+
+  res.json({ message: "Collaborator removed", task });
+};
+
+const GetCollaborator = async (req, res) => {
+  const task = await req.task.populate("collaborators.userId", "name email");
+  res.json(task.collaborators);
+};
+
+const ChangeCollaboratorRole = async (req, res) => {
+  const { userId, newRole } = req.body;
+
+  if (!["editor", "viewer"].includes(newRole))
+    return res.status(400).json({ message: "Invalid role" });
+
+  const task = req.task;
+  const collaborator = task.collaborators.find(
+    (c) => c.userId.toString() === userId
+  );
+  if (!collaborator)
+    return res.status(404).json({ message: "Collaborator not found" });
+  if (collaborator.role === "owner")
+    return res.status(400).json({ message: "Cannot change owner role" });
+
+  collaborator.role = newRole;
+  await task.save();
+
+  res.json({ message: "Collaborator role updated", task });
+};
+
 module.exports = {
   CreateTask,
   GetAllTasks,
   UpdateTask,
   DeleteTask,
+  AddCollaborator,
+  RemoveCollaborator,
+  GetCollaborator,
+  ChangeCollaboratorRole,
 };
