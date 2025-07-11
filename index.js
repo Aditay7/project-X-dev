@@ -9,8 +9,10 @@ const app = express();
 
 const userRoute = require("./routes/user");
 const taskRoute = require("./routes/task");
-const subtaskRoute = require("./routes/subTask")
+const subtaskRoute = require("./routes/subTask");
 const notifcationRoutes = require("./routes/notification");
+const commentRoute = require("./routes/comment");
+const activityLogRoute = require("./routes/activityLog");
 
 require("dotenv").config();
 
@@ -24,7 +26,6 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors());
 
-
 app.get("/", (req, res) => {
   res.send("HEY, SERVER IS RUNNING PERFECTLY FINE");
 });
@@ -33,7 +34,9 @@ app.use("/api/users", userRoute);
 app.use(checkForAuthenticationCookie("token"));
 app.use("/api/tasks", taskRoute);
 app.use("/api/subtasks", subtaskRoute);
-app.use("/api/notification", notifcationRoutes)
+app.use("/api/notification", notifcationRoutes);
+app.use("/api/comments", commentRoute);
+app.use("/api/activity", activityLogRoute);
 
 app.listen(PORT, () =>
   console.log(`Server is started on http://localhost:${PORT}`)

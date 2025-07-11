@@ -60,7 +60,7 @@ const UpdateTask = async (req, res) => {
   const { title, description, status, dueDate, priority, category } = req.body;
 
   try {
-    const task = await Task.findById(taskId);
+    const task = await Task.findById(taskId, { new: true });
     if (!task) return res.status(400).json({ message: "Task not found" });
 
     if (title) task.title = title;
