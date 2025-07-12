@@ -6,6 +6,13 @@ const CreateTask = async (req, res) => {
       ...req.body,
       user: req.user._id,
       collaborators: [{ userId: req.user._id, role: "owner" }],
+      // Recurrence fields
+      isRecurring: req.body.isRecurring || false,
+      recurrencePattern: req.body.recurrencePattern || "none",
+      recurrenceInterval: req.body.recurrenceInterval || 1,
+      recurrenceEndDate: req.body.recurrenceEndDate,
+      recurrenceDaysOfWeek: req.body.recurrenceDaysOfWeek || [],
+      recurrenceCustomDates: req.body.recurrenceCustomDates || [],
     });
     await newTask.save();
     res.status(201).json(newTask);
@@ -57,7 +64,20 @@ const GetAllTasks = async (req, res) => {
 
 const UpdateTask = async (req, res) => {
   const taskId = req.params.id;
-  const { title, description, status, dueDate, priority, category } = req.body;
+  const {
+    title,
+    description,
+    status,
+    dueDate,
+    priority,
+    category,
+    isRecurring,
+    recurrencePattern,
+    recurrenceInterval,
+    recurrenceEndDate,
+    recurrenceDaysOfWeek,
+    recurrenceCustomDates,
+  } = req.body;
 
   try {
     const task = await Task.findById(taskId, { new: true });
@@ -69,6 +89,14 @@ const UpdateTask = async (req, res) => {
     if (dueDate) task.dueDate = dueDate;
     if (priority) task.priority = priority;
     if (category) task.category = category;
+    // Recurrence fields
+    if (typeof isRecurring !== "undefined") task.isRecurring = isRecurring;
+    if (recurrencePattern) task.recurrencePattern = recurrencePattern;
+    if (recurrenceInterval) task.recurrenceInterval = recurrenceInterval;
+    if (recurrenceEndDate) task.recurrenceEndDate = recurrenceEndDate;
+    if (recurrenceDaysOfWeek) task.recurrenceDaysOfWeek = recurrenceDaysOfWeek;
+    if (recurrenceCustomDates)
+      task.recurrenceCustomDates = recurrenceCustomDates;
 
     const updatedTask = await task.save();
     res.status(200).json({
@@ -81,6 +109,12 @@ const UpdateTask = async (req, res) => {
         dueDate: updatedTask.dueDate,
         priority: updatedTask.priority,
         category: updatedTask.category,
+        isRecurring: updatedTask.isRecurring,
+        recurrencePattern: updatedTask.recurrencePattern,
+        recurrenceInterval: updatedTask.recurrenceInterval,
+        recurrenceEndDate: updatedTask.recurrenceEndDate,
+        recurrenceDaysOfWeek: updatedTask.recurrenceDaysOfWeek,
+        recurrenceCustomDates: updatedTask.recurrenceCustomDates,
       },
     });
   } catch (error) {

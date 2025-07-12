@@ -41,6 +41,33 @@ const taskSchema = new Schema(
         },
       },
     ],
+    // Recurrence fields
+    isRecurring: {
+      type: Boolean,
+      default: false,
+    },
+    recurrencePattern: {
+      type: String,
+      enum: ["none", "daily", "weekly", "monthly", "custom"],
+      default: "none",
+    },
+    recurrenceInterval: {
+      type: Number, // e.g., every 2 days/weeks/months
+      default: 1,
+    },
+    recurrenceEndDate: {
+      type: Date, // when to stop recurring
+    },
+    recurrenceDaysOfWeek: [
+      {
+        type: Number, // 0 (Sunday) - 6 (Saturday), for weekly pattern
+      },
+    ],
+    recurrenceCustomDates: [
+      {
+        type: Date, // for custom recurrence dates
+      },
+    ],
   },
   { timestamps: true }
 );

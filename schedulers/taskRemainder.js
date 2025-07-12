@@ -19,6 +19,61 @@ cron.schedule("0 8 * * *", async () => {
     },
   }).populate("user");
 
+  // --- Recurring Task Logic ---
+  const recurringTasks = await Task.find({ isRecurring: true });
+  for (const task of recurringTasks) {
+    // Skip if recurrence ended
+    if (task.recurrenceEndDate && now > task.recurrenceEndDate) continue;
+    let shouldCreate = false;
+    let nextDueDate = null;
+    if (task.recurrencePattern === "daily") {
+      shouldCreate = true;
+      nextDueDate = new Date(task.dueDate);
+      nextDueDate.setDate(nextDueDate.getDate() + task.recurrenceInterval);
+    } else if (task.recurrencePattern === "weekly") {
+      const todayDay = now.getDay();
+      if (
+        task.recurrenceDaysOfWeek &&
+        task.recurrenceDaysOfWeek.includes(todayDay)
+      ) {
+        shouldCreate = true;
+        nextDueDate = new Date(task.dueDate);
+        nextDueDate.setDate(
+          nextDueDate.getDate() + 7 * task.recurrenceInterval
+        );
+      }
+    } else if (task.recurrencePattern === "monthly") {
+      shouldCreate = true;
+      nextDueDate = new Date(task.dueDate);
+      nextDueDate.setMonth(nextDueDate.getMonth() + task.recurrenceInterval);
+    } else if (task.recurrencePattern === "custom") {
+      if (
+        task.recurrenceCustomDates &&
+        task.recurrenceCustomDates.some((date) => {
+          const d = new Date(date);
+          return d.toDateString() === now.toDateString();
+        })
+      ) {
+        shouldCreate = true;
+        // No automatic nextDueDate for custom
+      }
+    }
+    if (shouldCreate) {
+      // Create a new task instance for the next occurrence
+      const newTask = new Task({
+        ...task.toObject(),
+        _id: undefined,
+        dueDate: nextDueDate || task.dueDate,
+        status: "pending",
+        createdAt: undefined,
+        updatedAt: undefined,
+      });
+      await newTask.save();
+      console.log(`Created recurring task for ${task.title} on ${nextDueDate}`);
+    }
+  }
+  // --- End Recurring Task Logic ---
+
   console.log("Found", tasks.length, "tasks due tomorrow");
 
   const notificationPromises = tasks.map(async (task) => {
