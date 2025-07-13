@@ -13,6 +13,7 @@ const subtaskRoute = require("./routes/subTask");
 const notifcationRoutes = require("./routes/notification");
 const commentRoute = require("./routes/comment");
 const activityLogRoute = require("./routes/activityLog");
+const analyticsRoute = require("./routes/analytics");
 
 require("dotenv").config();
 
@@ -37,6 +38,7 @@ app.use("/api/subtasks", subtaskRoute);
 app.use("/api/notification", notifcationRoutes);
 app.use("/api/comments", commentRoute);
 app.use("/api/activity", activityLogRoute);
+app.use("/api/analytics", analyticsRoute);
 
 app.listen(PORT, () =>
   console.log(`Server is started on http://localhost:${PORT}`)
